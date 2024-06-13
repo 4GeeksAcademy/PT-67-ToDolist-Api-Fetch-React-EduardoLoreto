@@ -115,31 +115,31 @@ const Home = () => {
 	}, [tasks]);
 
 	return (
-		<div className="row m-auto py-2">
+		<div className="container-fluid row-flex justify-content-center w-75 mb-5 mt-5">
 			<form onSubmit={createUser} className="mb-4">
 				<div className="mb-3">
-					<label className="form-label"><strong>Crear Usuario</strong></label>
+					<label className="form-label"><strong>New User</strong></label>
 					<input
-						placeholder="Nombre de usuario"
+						placeholder="Name User"
 						value={newUserName}
 						className="form-control"
 						onChange={(event) => setNewUserName(event.target.value)}
 					/>
 				</div>
-				<button type="submit" className="btn btn-info mb-3">Crear Usuario</button>
+				<button type="submit" className="btn btn-warning mb-3"><strong>New User</strong></button>
 			</form>
 			<form onSubmit={createNewElement}>
 				<div className="mb-3">
-					<label className="form-label"><strong>Listado de Tasks</strong></label>
+					<label className="form-label"><strong>Task List</strong></label>
 					<input
-						placeholder="Añade tu nueva Task"
+						placeholder="Add New Task"
 						value={label}
 						className="form-control"
 						aria-describedby="emailHelp"
 						onChange={(event) => setLabel(event.target.value)}
 					/>
 				</div>
-				<button type="submit" className="btn btn-info mb-3">X</button>
+				<button type="submit" className="btn btn-warning mb-3"><strong>Add Task</strong></button>
 			</form>
 			<div className="w-100 m-auto">
 				<ol>
@@ -147,18 +147,19 @@ const Home = () => {
 						<li key={index}>
 							{item.label}
 							<button
-								className="btn btn-success btn-sm ms-2"
+								className="btn btn-warning btn-sm ms-3"
 								onClick={() => deleteElement(item.id)}
 							>
-								¡Hecho!
+								<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="black"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z" /></svg>
 							</button>
 						</li>
 					))}
 				</ol>
+
 				<button
-					className="btn btn-warning text-danger my-3"
+					className="btn btn-warning d-flex text-center my-3"
 					onClick={deleteAllElements}
-				><strong>Ok Tareas!</strong>
+				><strong>¡Delete Task!</strong>
 				</button>
 			</div>
 		</div>
