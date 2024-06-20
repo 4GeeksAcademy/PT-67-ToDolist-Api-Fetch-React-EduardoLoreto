@@ -2,28 +2,29 @@ import React, { useEffect, useState } from "react";
 
 const Home = () => {
 	const [tasks, setTasks] = useState([]);
-	const [name, setName] = useState("EduardoLoreto");
+	const [name, setName] = useState("");
 	const [label, setLabel] = useState("");
 	const [isDone, setIsDone] = useState(false);
 	const [newUserName, setNewUserName] = useState("");
+	const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-	// Método GET para obtener array con todas las tareas existentes para mi usuario
 	const getAllData = async () => {
-		try {
-			const response = await fetch(`https://playground.4geeks.com/todo/users/${name}`);
-			if (response.ok) {
-				const dataJson = await response.json();
-				setTasks(Array.isArray(dataJson.todos) ? dataJson.todos : []);
-				console.log("Datos obtenidos:", dataJson.todos);
-			} else {
-				console.error("Error al recuperar datos:", response.statusText);
+		const response = await fetch(`https://playground.4geeks.com/todo/users/${name}`);
+		if (response.ok) {
+			const dataJson = await response.json();
+			if (Array.isArray(dataJson.todos)) {
+				setTasks(dataJson.todos);
+				if (dataJson.todos.length === 0) {
+					alert("El usuario introducido ya existe, añade las tareas.");
+				} else {
+					alert("El usuario introducido ya existe, añade o borra tareas.");
+				}
 			}
-		} catch (error) {
-			console.error("Error al recuperar datos:", error);
+		} else {
+			console.error("Error al obtener tareas:", response.statusText);
 		}
 	};
 
-	// Método POST para añadir nuevas tareas al array de mi usuario
 	const createNewElement = async (event) => {
 		event.preventDefault();
 		const newTask = { label, done: isDone };
@@ -46,7 +47,6 @@ const Home = () => {
 		}
 	};
 
-	// Método DELETE para eliminar una tarea específica con un botón
 	const deleteElement = async (taskId) => {
 		try {
 			const response = await fetch(`https://playground.4geeks.com/todo/todos/${taskId}`, {
@@ -64,18 +64,13 @@ const Home = () => {
 		}
 	};
 
-	// Método DELETE para eliminar TODAS las tareas del array de mi usuario
 	const deleteAllElements = async () => {
 		try {
-			// 1.-Envío DELETE para cada tarea con mapeo y el "id" dinámico
 			const deletePromises = tasks.map((item) =>
 				fetch(`https://playground.4geeks.com/todo/todos/${item.id}`, { method: 'DELETE' })
 			);
 
-			// 2.- Esperar a que todas las peticiones DELETE se completen
 			await Promise.all(deletePromises);
-
-			// 3.- Actualizar el array de "tasks"
 			setTasks([]);
 			console.log("Todas las tasks han sido eliminadas");
 		} catch (error) {
@@ -83,12 +78,13 @@ const Home = () => {
 		}
 	};
 
-	// Método POST para crear un nuevo usuario
 	const createUser = async (event) => {
 		event.preventDefault();
+		const user = { username: newUserName }; // Asegúrate de que este es el formato que el servidor espera
 		try {
-			const response = await fetch(`https://playground.4geeks.com/todo/users/${newUserName}`, {
+			const response = await fetch(`https://playground.4geeks.com/todo/users`, {
 				method: 'POST',
+				body: JSON.stringify(user),
 				headers: { "Content-Type": "application/json" }
 			});
 
@@ -96,10 +92,12 @@ const Home = () => {
 				setName(newUserName);
 				setNewUserName("");
 				setTasks([]);
+				setIsAuthenticated(true);
 				console.log("Usuario creado:", newUserName);
-				getAllData(); // Obtener las tareas del nuevo usuario
+				getAllData();
 			} else {
-				console.error("Error al crear usuario:", response.statusText);
+				const errorData = await response.json();
+				console.error("Error al crear usuario:", errorData);
 			}
 		} catch (error) {
 			console.error("Error al crear usuario:", error);
@@ -107,7 +105,9 @@ const Home = () => {
 	};
 
 	useEffect(() => {
-		getAllData();
+		if (name) {
+			getAllData();
+		}
 	}, [name]);
 
 	useEffect(() => {
@@ -116,18 +116,20 @@ const Home = () => {
 
 	return (
 		<div className="container-fluid row-flex justify-content-center w-75 mb-5 mt-5">
-			<form onSubmit={createUser} className="mb-4">
-				<div className="mb-3">
-					<label className="form-label"><strong>New User</strong></label>
-					<input
-						placeholder="Name User"
-						value={newUserName}
-						className="form-control"
-						onChange={(event) => setNewUserName(event.target.value)}
-					/>
-				</div>
-				<button type="submit" className="btn btn-warning mb-3"><strong>New User</strong></button>
-			</form>
+			{!isAuthenticated && (
+				<form onSubmit={createUser} className="mb-4">
+					<div className="mb-3">
+						<label className="form-label"><strong>New User</strong></label>
+						<input
+							placeholder="Name User"
+							value={newUserName}
+							className="form-control"
+							onChange={(event) => setNewUserName(event.target.value)}
+						/>
+					</div>
+					<button type="submit" className="btn btn-warning mb-3"><strong>New User</strong></button>
+				</form>
+			)}
 			<form onSubmit={createNewElement}>
 				<div className="mb-3">
 					<label className="form-label"><strong>Task List</strong></label>
@@ -135,7 +137,6 @@ const Home = () => {
 						placeholder="Add New Task"
 						value={label}
 						className="form-control"
-						aria-describedby="emailHelp"
 						onChange={(event) => setLabel(event.target.value)}
 					/>
 				</div>
@@ -150,12 +151,13 @@ const Home = () => {
 								className="btn btn-warning btn-sm ms-3"
 								onClick={() => deleteElement(item.id)}
 							>
-								<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="black"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z" /></svg>
+								<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="black">
+									<path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z" />
+								</svg>
 							</button>
 						</li>
 					))}
 				</ol>
-
 				<button
 					className="btn btn-warning d-flex text-center my-3"
 					onClick={deleteAllElements}
